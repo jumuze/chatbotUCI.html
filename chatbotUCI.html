@@ -24,11 +24,11 @@
     <script>
         // Configuración de AWS (Amazon Polly)
         AWS.config.region = 'eu-west-1';
-        AWS.config.credentials = new AWS.Credentials('TU_AWS_ACCESS_KEY', 'TU_AWS_SECRET_KEY');
+        AWS.config.credentials = new AWS.Credentials('AKIA46ZDFEFPU6ZRONSW', 'haP7f+Bhr5bc/Usm5tqSBROkFxhM4dde3f13nLVB');
         const polly = new AWS.Polly();
 
         // API Key de OpenAI
-        const openaiApiKey = 'TU_OPENAI_API_KEY';
+        const openaiApiKey = 'sk-admin-1234abcd';
 
         function enviarPregunta() {
             const userInput = document.getElementById('userInput').value;
