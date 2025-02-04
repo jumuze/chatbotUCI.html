@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chatbot UCI - Integrado con ChatGPT y Amazon Polly</title>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1182.0.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f0f0f0; }
+        #chatbox { width: 90%; max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input, button { padding: 10px; margin: 5px; font-size: 14px; }
+        button { background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #messages { max-height: 300px; overflow-y: auto; margin-bottom: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h2>🤖 Chatbot UCI Virtual</h2>
+    <div id="chatbox">
+        <div id="messages"></div>
+        <input type="text" id="userInput" placeholder="Escribe tu pregunta aquí...">
+        <button onclick="enviarPregunta()">Enviar</button>
+    </div>
+
+    <script>
+        // Configuración de AWS (Amazon Polly)
+        AWS.config.region = 'eu-west-1';
+        AWS.config.credentials = new AWS.Credentials('TU_AWS_ACCESS_KEY', 'TU_AWS_SECRET_KEY');
+        const polly = new AWS.Polly();
+
+        // API Key de OpenAI
+        const openaiApiKey = 'TU_OPENAI_API_KEY';
+
+        function enviarPregunta() {
+            const userInput = document.getElementById('userInput').value;
+            if (userInput.trim() === '') return;
+
+            agregarMensaje('👤', userInput);
+            document.getElementById('userInput').value = '';
+
+            fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openaiApiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4',
+                    messages: [{ role: 'user', content: userInput }]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const respuesta = data.choices[0].message.content;
+                agregarMensaje('🤖', respuesta);
+                reproducirAudio(respuesta);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function agregarMensaje(remitente, mensaje) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p><strong>${remitente}:</strong> ${mensaje}</p>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function reproducirAudio(texto) {
+            const params = {
+                OutputFormat: 'mp3',
+                Text: texto,
+                VoiceId: 'Lucia',
+                LanguageCode: 'es-ES'
+            };
+
+            polly.synthesizeSpeech(params, (err, data) => {
+                if (err) {
+                    console.error('Error en Polly:', err);
+                } else {
+                    const audioBlob = new Blob([data.AudioStream], { type: 'audio/mp3' });
+                    const audioUrl = URL.createObjectURL(audioBlob);
+                    new Audio(audioUrl).play();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
